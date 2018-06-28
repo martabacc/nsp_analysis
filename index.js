@@ -3,7 +3,6 @@ require('dotenv').load();
 const request = require('request');
 const cheerio = require('cheerio');
 const axios = require('axios');
-const Base64 = require('base-64')
 const lastCounter = 1;
 const url = `https://nodesecurity.io/advisories?page=`;
 const detailUrl = 'https://nodesecurity.io';
@@ -14,41 +13,49 @@ let detailPromises = [];
 let wqwq = [];
 let anotherArray = [];
 
-const tok = `${process.env.HO_USERNAME}:${process.env.HO_PASSWORD}`;
-const hash = Base64.encode(tok);
-const Basic = 'Basic ' + hash;
+const errorHandling = (error) => { console.error(error) }
 
-const errorHandling = (error) => { console.log(error)}
+const toResultObject = (promise) => {
+    return promise
+    .then(result => ({ success: true, result }))
+    .catch(error => ({ success: false, error }));
+};
 
-const scrapeHackerone = (results) => {
-	console.log(results);
+const gatheredIndex = [
+	'vulnerability_information', //the markdown is here
+	'title',
+	'created_at',
+	'disclosed_at'
+];
+
+const scrapeHackerone =  (results) => {
+	// console.log(results);
 	results.forEach( (result) => {
-		const htmlResult = cheerio.load(result.data);
-		let $ = cheerio.load(htmlResult);
-		console.log(result.data);
-		anotherArray[result.config.url].impact = $('body').html();
-		anotherArray[result.config.url].stepsToReproduce = $('#steps-to-reproduce').closest('blockquote p').text()
-		anotherArray[result.config.url].description = $('#vulnerability-description').closest('blockquote p').text();
+	    if (!result.success) {
+    		anotherArray[result.error.config.url].isPrivate = true;
+			return;
+	    }
+	    const idx = result.result.config.url;
+    	anotherArray[idx].isPrivate = false;
+	    const data = result.result.data;
+	    gatheredIndex.forEach( gIdx =>  anotherArray[idx][gIdx] = data[gIdx]);
 
 	});
-	// console.log(anotherArray);
+	console.log(anotherArray);
 }
 
-const acquireDetail = (results) => {
+const acquireDetail =  (results) => {
 	results.forEach( (result) => {
 		const htmlResult = result.data;
 		let $ = cheerio.load(htmlResult);
 		let hackerOneLink = $('div.advisory-description ul').children().first().find('a').attr('href');
-		anotherArray[hackerOneLink] = processedData[result.config.url];
-		anotherArray[hackerOneLink].hackerOneLink = hackerOneLink;
+		anotherArray[hackerOneLink+'.json'] = processedData[result.config.url];
+		anotherArray[hackerOneLink+'.json'].hackerOneLink = hackerOneLink;
 
-
-		hackerOneLink = hackerOneLink.replace('hackerone.com/reports','api.hackerone.com/v1/reports');
-		console.log(hackerOneLink)
-       
-		wqwq.push(axios.get(hackerOneLink, {headers : { 'Authorization' : Basic }}));
+		// console.log(hackerOneLink);
+		wqwq.push(axios.get(hackerOneLink+'.json'));
 	});
-	Promise.all(wqwq).then(scrapeHackerone);
+	Promise.all(wqwq.map(toResultObject)).then(scrapeHackerone);
 }
 
 
