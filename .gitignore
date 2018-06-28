@@ -1,2 +1,4 @@
 .env
-*.csvnode_modules/
+*.csv
+node_modules/
+
