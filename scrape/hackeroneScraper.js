@@ -1,4 +1,3 @@
-import { exportToCsv } from '../ops/exportToCsv';
 import { gatheredIndex, log } from '../util';
 
 export const hackeroneScrape = (anotherArray) => (results) => {

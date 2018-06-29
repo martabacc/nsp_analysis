@@ -2,6 +2,7 @@ import axios from 'axios';
 import { lastCounter, url } from './const';
 import { clean } from './mining/clean';
 import { exportToCsv } from './ops/exportToCsv';
+import { gatherFunctionality } from './scrape/gatherFunctionality';
 import { nspScrape } from './scrape/nspScraper';
 import { log } from './util';
 
@@ -19,7 +20,8 @@ const main = async () => {
   log('info', `Finish getting JSON Result (With length of ${jsonResult.length})`);
   log('info', `Cleaning data...`);
   const cleanedData = clean(jsonResult);
-  exportToCsv(cleanedData)
+  const completeData = await gatherFunctionality(cleanedData);
+  exportToCsv(completeData);
   log('info', `Finish program. Now quitting.`);
 };
 

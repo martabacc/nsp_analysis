@@ -32,7 +32,7 @@ export const clean = (data) => {
     .replace(/\&gt\;/g, '>')
     .replace(/\&lt\;/g, '<')
     .replace(/\&\#39\;/g, '"')
-    .replace(/\&quot;/g, '« »')
+    .replace(/\&quot;/g, '"')
     .replace(/(<([^>]+)>)/ig, '');
     const cobaString = htmlDescription.replace(/(<([^>]+)>)/ig, '').replace(/\&gt\;/g, '>').replace(
         /\&lt\;/g, '<').replace(/\&\#39\;/g, '"').replace(/\&quot;/g, '« »').replace(

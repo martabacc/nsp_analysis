@@ -14,5 +14,5 @@ export const exportToCsv = (finalResult) => {
     });
   });
 
-  log('info', `CSV generated in${outFile}.`);
+  log('info', `CSV generated in ${outFile}.`);
 };
