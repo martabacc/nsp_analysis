@@ -30,5 +30,5 @@ export const hackeroneScrape = (anotherArray) => (results) => {
 
   log('info', `Finish curating hackerOne jsons. Result: ${privateReport} private, ${publicReport} public`);
 
-  return exportToCsv(finalResult);
+  return finalResult;
 };

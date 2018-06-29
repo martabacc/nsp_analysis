@@ -33,11 +33,26 @@ const gatheredIndex = [
   'disclosed_at'
 ];
 
-const log = (level, message) => logger.log({level, message});
+const log = (level, message) => logger.log({ level, message });
+
+const pattern = new RegExp('^(https?:\\/\\/)?' + // protocol
+    '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // domain name and extension
+    '((\\d{1,3}\\.){3}\\d{1,3}))' + // OR ip (v4) address
+    '(\\:\\d+)?' + // port
+    '(\\/[-a-z\\d%@_.~+&:]*)*' + // path
+    '(\\?[;&a-z\\d%@_.,~+&:=-]*)?' + // query string
+    '(\\#[-a-z\\d_]*)?$', 'i'); // fragment locator
+
+const isUrlOrEmpty = (str) => {
+  return !pattern.test(str) || str.length === 0;
+};
 
 module.exports = {
   log,
   gatheredIndex,
   errorHandling,
-  toResultObject
+  toResultObject,
+  isUrlOrEmpty
 };
+
+

@@ -5,7 +5,6 @@ import { errorHandling, log } from '../util';
 
 export const exportToCsv = (finalResult) => {
   log('info', `Start exporting CSV`);
-
   const arr = Object.keys(finalResult).map((key) => finalResult[key]);
 
   jsonexport(arr, (err, csv) => {
@@ -15,6 +14,5 @@ export const exportToCsv = (finalResult) => {
     });
   });
 
-  log('info', `Finish. CSV is generated in ${outFile}.`);
-  return finalResult;
+  log('info', `CSV generated in${outFile}.`);
 };
