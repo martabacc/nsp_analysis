@@ -9,7 +9,9 @@ import { log, toResultObject } from './util';
 log('info', 'Initiating program...');
 
 log('info', `Start pusing promises`);
-
+function sleep (time) {
+  return new Promise((resolve) => setTimeout(resolve, time));
+}
 let promises = [];
 for (let counter = 1; counter <= lastCounter; counter++) {
   promises.push(axios.get(`${url}${counter}`));
@@ -26,11 +28,21 @@ const main = async () => {
   log('info', `Cleaning data...`);
   const cleanedData = clean(jsonResult);
   const lala = [];
-  for (let x = 0; x < cleanedData.length; x=x+30) {
-    const currentModule = cleanedData.slice(x, x+30);
-    log('info', `Gathering info [${x} to ${x+30} from ${cleanedData.length}]`);
-    const completeData = await gatherFunctionality(currentModule);
-    lala.push(completeData);
+  const lim=2;
+  for (let x = 0; x < cleanedData.length; x=x+lim) {
+    const currentModule = cleanedData.slice(x, x+lim);
+    log('info', `Gathering info [${x} to ${x+lim} from ${cleanedData.length}]`);
+    try{
+      const completeData = await gatherFunctionality(currentModule);
+      await sleep(2000);
+      lala.push(...completeData);
+    } catch(e) {
+      log('warn', 'Got error...');
+      if(e.status===429){
+        log('warn', 'Got TLE for max call to Github API, trying again...');
+        x=x-lim;
+      }
+    }
   }
   log('info', `Now exporting to CSV`);
   exportToCsv(lala);

@@ -3,12 +3,13 @@ import axiosRetry from 'axios-retry';
 import cheerio from 'cheerio';
 import { removeStopwords } from 'stopword';
 import { githubToken } from '../const';
-import { log, toResultObject } from '../util';
+import { log, toResultObject, errorHandling } from '../util';
 
 const randomTimeoutDelay = () => Math.floor(Math.random() * 1000);
 
 export const gatherFunctionality = async (dataArray) => {
 
+  log('info', 'Started gathering functionality');
   const res = await Promise.all(
       dataArray.map(async (value) => {
         const { moduleLink } = value;
@@ -21,11 +22,11 @@ export const gatherFunctionality = async (dataArray) => {
         const githubApiUrl = githubUrl.replace('github.com', 'api.github.com/repos');
 
         axiosRetry(axios, {
-          retryDelay: (retryCount) => retryCount * randomTimeoutDelay(),
+          retryDelay:  (r) => r*1000,
           shouldResetTimeout: true,
           retryCondition: () => true
         });
-        const githubResult = await axios.get(githubApiUrl + `?access_token=${githubToken}`);
+        const githubResult = await axios.get(githubApiUrl + `?access_token=${githubToken}`).catch(errorHandling) || "";
 
         const {status, data} = githubResult;
         const isValidGitApiResponse = status === 200 && data.description;
@@ -36,8 +37,9 @@ export const gatherFunctionality = async (dataArray) => {
           functionality: removeStopwords(githubDescription).join(' '),
           keywords
         };
-      }).map(toResultObject)
+      })
   );
 
+  log('info', 'Finish gather functionality');
   return res;
 };

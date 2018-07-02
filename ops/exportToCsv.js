@@ -1,19 +1,16 @@
 import fs from 'fs';
 import { outFile } from '../const';
-import { errorHandling, log } from '../util';
+import { log } from '../util';
 
 export const exportToCsv = (finalResult) => {
   log('info', `Start exporting CSV`);
-  const f = finalResult[0];
+  const e = finalResult;
 
   const file = fs.createWriteStream(outFile);
-  file.on('error', errorHandling);
-  f.forEach(({result}) => {
-    const string = Object.keys(result).map(key => result[key]).join(',');
-    console.log(string)
-    file.write(string + '\n');
-  });
-  file.end();
+  const Json2csvParser = require('json2csv').Parser;
+  const parser = new Json2csvParser();
+  const csv = parser.parse(e);
+  file.write(csv);
 
   log('info', `CSV generated in ${outFile}.`);
 };
