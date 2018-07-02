@@ -23,7 +23,13 @@ const errorHandling = (error) => {
 const toResultObject = (promise) => {
   return promise
   .then(result => ({ success: true, result }))
-  .catch(error => ({ success: false, error }));
+  .catch(error => {
+    if(!error.config) console.log(error);
+    errorHandling(
+        `Got ERROR on ${error.config.url || JSON.stringify(error)}`
+    );
+    return { success: false, result: error, error }
+  });
 };
 
 const gatheredIndex = [

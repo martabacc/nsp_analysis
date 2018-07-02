@@ -1,20 +1,20 @@
 import axios from 'axios';
-import { detailUrl } from '../const';
-import { errorHandling, log } from '../util';
 import cheerio from 'cheerio';
+import { detailUrl } from '../const';
+import { log, toResultObject } from '../util';
 import { nspDetailScrape } from './nspDetailScraper';
-
-const processedData = [];
-let detailPromises = [];
 
 export const nspScrape = (results) => {
   log('info', 'Promises NSP resolved, scraping through HTML...');
 
-  results.forEach(result => {
+  let processedData = [];
+  let detailPromises = [];
+
+  results.forEach(({ result }) => {
     const htmlResult = result.data;
     let $ = cheerio.load(htmlResult);
 
-    $('.advisories-table tbody tr').each(async (idx, child) => {
+    $('.advisories-table tbody tr').each((idx, child) => {
       let scrapedData = {};
 
       const tableRow = $(child);
@@ -37,7 +37,7 @@ export const nspScrape = (results) => {
     });
   });
   log('info', 'Finish curating object, gathering info from NSP detail pages...');
-  return Promise.all(detailPromises).then(nspDetailScrape(processedData)).catch(errorHandling);
+  return Promise.all(detailPromises.map(toResultObject)).then(nspDetailScrape(processedData));
 };
 
 export default nspScrape;

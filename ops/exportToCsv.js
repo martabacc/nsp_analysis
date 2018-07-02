@@ -1,18 +1,19 @@
-import jsonexport from 'jsonexport';
-import { outFile } from '../const';
 import fs from 'fs';
+import { outFile } from '../const';
 import { errorHandling, log } from '../util';
 
 export const exportToCsv = (finalResult) => {
   log('info', `Start exporting CSV`);
-  const arr = Object.keys(finalResult).map((key) => finalResult[key]);
+  const f = finalResult[0];
 
-  jsonexport(arr, (err, csv) => {
-    if (err) errorHandling(err);
-    fs.writeFile(outFile, csv, (err) => {
-      if (err) return errorHandling(err);
-    });
+  const file = fs.createWriteStream(outFile);
+  file.on('error', errorHandling);
+  f.forEach(({result}) => {
+    const string = Object.keys(result).map(key => result[key]).join(',');
+    console.log(string)
+    file.write(string + '\n');
   });
+  file.end();
 
   log('info', `CSV generated in ${outFile}.`);
 };

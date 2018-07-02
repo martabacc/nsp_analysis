@@ -4,17 +4,18 @@ import { gatheredIndex, isUrlOrEmpty, log } from '../util';
 
 export const clean = (data) => {
   log('info', `Started cleaning data`);
-  const arr = Object.keys(data).map((key) => data[key]);
-  return arr.map((value) => {
-    if (value.isPrivate) return {
+  const arr = Object.keys(data).map((key) => data[key]).map((value) => {
+
+    const indexToClean = gatheredIndex[0];
+    const htmlDescription = value[indexToClean];
+
+    if (value.isPrivate || !htmlDescription) return {
       ...value,
       description: null,
       impact: null,
       slicedDescription: null,
       slicedImpact: null
     };
-    const indexToClean = gatheredIndex[0];
-    const htmlDescription = value[indexToClean];
     const $ = cheerio.load(htmlDescription);
     const description = $('h2#vulnerability-description')
     .next()
@@ -48,4 +49,5 @@ export const clean = (data) => {
     };
   });
   log('info', `Finished cleaning data`);
+  return arr;
 };

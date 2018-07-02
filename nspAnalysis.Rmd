@@ -1,0 +1,131 @@
+---
+title: "Insight: Node Security Issues"
+author: "Ronauli Silva"
+date: "06/29/2018"
+output: html_notebook
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## TLDR
+
+This notebook is written in [R Markdown](http://rmarkdown.rstudio.com) Notebook. I guess the title is pretty much conveys the content :p
+
+## How
+
+So the idea is to see what's happening out there, see common issues, and it would be best to find it through a website that gather reports of node security issues. The best website I could find is [NodeSecurity.io](https://nodesecurity.io), and scraping the data. Thanks for Ramzi and Neel, by expanding the scraper range via connected link (github repo, hackerone report, npm keywords). 
+
+
+### Data Source
+
+1. Go to nodesecurity.io/advisories, we get:
+    + Package name
+    + Severity, level of damage. On range 1-10
+    + Version, both vulnerable and patched one(if any)
+    + Link to npm page of respective package
+2. From NSP detail page, we get the hackerOne link.
+3. From hackerone link, we gather these information as strings
+    + Vulnerability, e.g: Interospection graphql query leaks sensitive data.
+    + Impact, e.g: Execute bash script via request parameter
+4. From npm page, we gather:
+    + Keywords (easier to handle)
+5. From Github API, we get:
+    + Description/functionality of respective package
+    
+### How
+
+So we run the scraper on node.js, and manage to find the insight using R.
+
+## Insights
+
+Initialization
+```{r}
+rawData <- read.csv("csv/cleaned_no_functionality.csv")
+rawData
+```
+
+### Functionality with High Severity
+
+```{r}
+library(tm)
+library(rvest)
+library(SnowballC)
+titleCorpus <- VCorpus(VectorSource(rawData$title))
+clean <- function(corpus){
+  corpus <- tm_map(corpus, stripWhitespace)
+  corpus <- tm_map(corpus, removePunctuation)
+  corpus <- tm_map(corpus, content_transformer(tolower))
+  corpus <- tm_map(corpus, removeWords, stopwords("en"))
+    return(corpus)
+}
+
+cleanFunctionalityData <- clean(titleCorpus)
+# stemming
+
+stemFunc <- content_transformer(function(x){
+  paste(sapply(words(x),stemDocument),collapse = " ")
+})
+
+# stemmed functionality string
+stemFnData <- tm_map(cleanFunctionalityData, stemFunc)
+inspect(stemFnData[[1]])
+typeof(stemFnData)
+```
+
+#### Bar chart: Most Frequent Word in Titles
+```{r}
+
+dtm <- TermDocumentMatrix(stemFnData)
+mat <- as.matrix(dtm)
+
+# sort by frequency and print the first 20]
+sortedData <- sort(rowSums(mat), decreasing = TRUE )
+dtm
+d <- data.frame(word = names(sortedData), freq=sortedData)
+# head(d, 20)
+barplot(sortedData[1:20]
+        ,main='Most Frequent Word in Titles'
+        ,horiz=TRUE
+        ,col=rev(brewer.pal(100, "YlOrRd"))
+        ,las=2
+        ,cex.names=0.8)
+```
+
+#### Title - Severity Relationships
+
+```{r}
+
+rawData2 <- data.frame(rawData$title, rawData$severity)
+names(rawData2) <- c("title","severity")
+
+rawData2$severity<-as.integer(rawData$severity)
+# summary(rawData2)
+
+```
+
+
+#### Wordcloud
+```{r}
+a.dtm3 <- removeSparseTerms(dtm, sparse=0.7)
+a.dtm.df <- as.data.frame(inspect(a.dtm3))
+a.dtm.df.scale <- scale(a.dtm.df)
+d <- dist(a.dtm.df.scale, method = "euclidean") 
+fit <- hclust(d, method="ward")
+plot(fit)
+
+
+# just for fun... 
+library(RColorBrewer)
+
+m = as.matrix(t(dtm))
+# get word counts in decreasing order
+word_freqs = sort(colSums(m), decreasing=TRUE) 
+# create a data frame with words and their frequencies
+dm = data.frame(word=names(word_freqs), freq=word_freqs)
+# plot wordcloud
+wordcloud(dm$word, dm$freq, random.order=FALSE, colors=brewer.pal(8, "Dark2"))
+```
+Thank you.
+

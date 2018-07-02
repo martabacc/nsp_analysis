@@ -1,3 +1,5 @@
 .env
 *.csv
 node_modules/
+.Rproj.user
+.httr-oauth

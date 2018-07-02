@@ -4,24 +4,36 @@ import { clean } from './mining/clean';
 import { exportToCsv } from './ops/exportToCsv';
 import { gatherFunctionality } from './scrape/gatherFunctionality';
 import { nspScrape } from './scrape/nspScraper';
-import { log } from './util';
+import { log, toResultObject } from './util';
 
 log('info', 'Initiating program...');
 
-let promises = [...Array(lastCounter).keys()].map(
-    counter => axios.get(`${url}${counter + 1}`)
-);
+log('info', `Start pusing promises`);
 
-log('info', `Pushing promises of NSP (${lastCounter} pages) table rows...`);
+let promises = [];
+for (let counter = 1; counter <= lastCounter; counter++) {
+  promises.push(axios.get(`${url}${counter}`));
+};
+
+log('info', `Finish pushing promises of NSP (${lastCounter} pages) table rows...`);
 
 const main = async () => {
-  const results = await Promise.all(promises);
+
+  log('info', `Start resolving NSP page promises...`);
+  const results = await Promise.all(promises.map(toResultObject));
+  log('info', `NSP page promise all resolved with ${results.length} results`);
   const jsonResult = await nspScrape(results);
-  log('info', `Finish getting JSON Result (With length of ${jsonResult.length})`);
   log('info', `Cleaning data...`);
   const cleanedData = clean(jsonResult);
-  const completeData = await gatherFunctionality(cleanedData);
-  exportToCsv(completeData);
+  const lala = [];
+  for (let x = 0; x < cleanedData.length; x=x+30) {
+    const currentModule = cleanedData.slice(x, x+30);
+    log('info', `Gathering info [${x} to ${x+30} from ${cleanedData.length}]`);
+    const completeData = await gatherFunctionality(currentModule);
+    lala.push(completeData);
+  }
+  log('info', `Now exporting to CSV`);
+  exportToCsv(lala);
   log('info', `Finish program. Now quitting.`);
 };
 
