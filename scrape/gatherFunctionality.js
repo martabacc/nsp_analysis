@@ -26,7 +26,7 @@ export const gatherFunctionality = async (dataArray) => {
           shouldResetTimeout: true,
           retryCondition: () => true
         });
-        const githubResult = await axios.get(githubApiUrl + `?access_token=${githubToken}`).catch(errorHandling) || "";
+        const githubResult = await axios.get(githubApiUrl + `?access_token=${githubToken}`);
 
         const {status, data} = githubResult;
         const isValidGitApiResponse = status === 200 && data.description;
