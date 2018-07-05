@@ -21,10 +21,7 @@ library(wordcloud)
 
 # initiating raw data
 
-rawData <- read.csv("csv/all.csv")
-rawData$created_at <- as.Date(rawData$created_at, format="%Y-%m-%d")
-rawData$disclosed_at <- as.Date(rawData$disclosed_at, format="%Y-%m-%d")
-rawData$reportedAt <- strptime(rawData$reportedAt, "%Y-%m-%d %H:%M:%S")
+rawData <- read.csv("csv/synk.csv")
 
 ```
 
@@ -65,13 +62,14 @@ So we run the scraper on node.js, and manage to find the insight using R.
 ```{r}
 basic.data <- data.frame(rawData$disclosed_at)
 
+length(unique(rawData$moduleName))
 ```
 
 
 ### Functionality with High Severity
 
 ```{r}
-titleCorpus <- VCorpus(VectorSource(rawData$title))
+titleCorpus <- VCorpus(VectorSource(rawData$vulnerabilities))
 
 clean <- function(corpus){
   corpus <- tm_map(corpus, stripWhitespace)
@@ -126,7 +124,7 @@ ggplot(data = d  , aes(x = word, y = freq, fill=-freq)) +
 
 ```{r}
 
-df <- data.frame(rawData$title, rawData$severity)
+df <- data.frame(rawData$vulnerabilities, rawData$severity)
 names(df) <- c("title","severity")
 df <- mutate(df, id = rownames(df))
 df <- df[!(is.na(df$title) | df$title==""), ]
@@ -215,7 +213,7 @@ ggplot(data =sorted  , aes(x=reorder(word,-freq), y=freq, fill=freq)) +
     labs(title = 'Word Occurences on Reports`s Title',
          x = 'Words',
          y = 'Occurences')  +
-  geom_text(aes(label=sprintf("%1.0f", freq), y=freq+5))
+  geom_text(aes(label=sprintf("%1.0f", freq), y=freq+10))
 ```
 
 
